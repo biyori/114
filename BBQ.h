@@ -19,8 +19,8 @@ private:
 public:
     BBQ(int);
     ~BBQ(){};
-    void insert(int item);
-    int remove();
+    void insert(int item, int id);
+    int remove(int id);
     int size();
 };
 
@@ -29,26 +29,30 @@ BBQ::BBQ(int size)
     max_size = size;
     front = nextEmpty = 0;
 }
-void BBQ::insert(int item)
+void BBQ::insert(int item, int threadID)
 {
     unique_lock<mutex> lock(the_lock);
     while ((nextEmpty - front) == max_size)
     {
+        cout << "WAITING ON DIS BISH: #" << threadID << endl;
         itemRemoved.wait(lock);
     }
+    cout << "COOMIN ALL OVER: #" << threadID << endl;
     items.push_back(item);
     nextEmpty++;
     itemAdded.notify_all();
     lock.unlock();
 }
-int BBQ::remove()
+int BBQ::remove(int threadID)
 {
     int tmp;
     unique_lock<mutex> lock(the_lock);
     while ((nextEmpty - front) == 0)
     {
+        cout << "REMOVE DIS BISH WAITING: #" << threadID << endl;
         itemAdded.wait(lock);
     }
+    cout << "EJECTING DIS BISH: #" << threadID << endl;
     tmp = items.back();
     items.pop_back();
     nextEmpty--;
