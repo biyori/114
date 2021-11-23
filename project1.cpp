@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <sys/types.h>
+#include <sys/syscall.h>
 #include "BBQ.h"
 #define THREADS 200
 #define BBQ_CAPACITY 10
@@ -14,7 +15,9 @@ int bonk(int, int);
 
 void *add_bonk(void *slep) // TP
 {
-    pid_t tid = gettid();
+    uint64_t tid;
+ pthread_threadid_np(NULL, &tid);
+    //pid_t tid = gettid();
     int id = tid;
     int i = 0;
     int slp = *((int *)slep);
@@ -31,7 +34,9 @@ void *add_bonk(void *slep) // TP
 
 void *remove_bonk(void *slep) // TC
 {
-    pid_t tid = gettid();
+    uint64_t tid;
+ pthread_threadid_np(NULL, &tid);
+    //pid_t tid = gettid();
     int id = tid;
     int i = 0;
     int slp = *((int *)slep);
