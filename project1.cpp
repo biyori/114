@@ -5,7 +5,7 @@
 #include <sys/types.h>
 #include <sys/syscall.h>
 #include "BBQ.h"
-#define THREADS 200
+#define THREADS 20
 #define BBQ_CAPACITY 10
 
 using namespace std;
@@ -16,7 +16,7 @@ int bonk(int, int);
 void *add_bonk(void *slep) // TP
 {
     uint64_t tid;
- pthread_threadid_np(NULL, &tid);
+    pthread_threadid_np(NULL, &tid);
     //pid_t tid = gettid();
     int id = tid;
     int i = 0;
@@ -27,15 +27,15 @@ void *add_bonk(void *slep) // TP
         qq->insert(i, id);
         cout << "ADDING SHIT\n";
         i++;
-        cout << "SLEP FOR: " << bonk(qq->size(),slp) << endl;
-        sleep(bonk(qq->size(),slp)); //queue_Size, current_q_size, sleep
+        cout << "SLEP FOR: " << bonk(qq->size(), slp) << endl;
+        sleep(bonk(qq->size(), slp)); //queue_Size, current_q_size, sleep
     }
 }
 
 void *remove_bonk(void *slep) // TC
 {
     uint64_t tid;
- pthread_threadid_np(NULL, &tid);
+    pthread_threadid_np(NULL, &tid);
     //pid_t tid = gettid();
     int id = tid;
     int i = 0;
@@ -46,8 +46,8 @@ void *remove_bonk(void *slep) // TC
         id = qq->remove(id);
         //printf("REMOVING %d : (iter) %d (Queue Size) %d\n", id, i, qq->size());
         i++;
-        cout << "SLEP FOR: " << bonk(qq->size(),slp) << endl;
-        sleep(bonk(qq->size(),slp)); //queue_Size, current_q_size, sleep
+        cout << "SLEP FOR: " << bonk(qq->size(), slp) << endl;
+        sleep(bonk(qq->size(), slp)); //queue_Size, current_q_size, sleep
     }
 }
 
