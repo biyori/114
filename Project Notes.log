@@ -1,0 +1,14 @@
+- Implemented queue via vector same behavior as a real queue data structure (FIFO via push back and pop back)
+- I've discovered that if you have more consumers than producers (edited)
+[2:33 AM]
+Adding items wait section never hits
+[2:33 AM]
+but if you have more producers than consumers
+[2:33 AM]
+then remove wait never hits and add wait finally hits
+then if they are equal they finally both hit
+
+Producers: 0 1 2 3 4 5 6 7 8 9 
+Consumers: 10 11 12 13 14 15 16 17 18 19 20 
+add items waiting never hits
+
