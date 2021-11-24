@@ -83,12 +83,12 @@ int main(int argc, char **argv)
         for (int i = 0; i < BBQ_CAPACITY; i++)
             printf("Queue Size [%d] sleeps for => %2d\n", i, bonk(i, 10));
 
-        cout << "Producers: ";
-        for (int i = 0; i < (THREADS / 2); i++)
-            cout << i << " ";
-        cout << "\nConsumers: ";
+        cout << "Producers Threads: ";
+        for (int i = 0; i < THREADS / 2; i++)
+            printf("%3d", i);
+        cout << "\nConsumers Threads: ";
         for (int i = THREADS / 2; i < THREADS; i++)
-            cout << i << " ";
+            printf("%3d", i);
         cout << endl;
 
         cerr << "Error missing arguments: project1 TC TP" << endl;
