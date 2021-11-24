@@ -34,10 +34,10 @@ void BBQ::insert(int item, int threadID)
     unique_lock<mutex> lock(the_lock);
     while ((nextEmpty - front) == max_size)
     {
-        cout << "WAITING ON DIS BISH: #" << threadID << endl;
+        cout << "Waiting to produce by thread number #" << threadID << endl;
         itemRemoved.wait(lock);
     }
-    cout << "COOMIN ALL OVER: #" << threadID << endl;
+    cout << "Item ID #" << item << " produced by thread number #" << threadID << endl;
     items.push_back(item);
     nextEmpty++;
     itemAdded.notify_all();
@@ -49,11 +49,11 @@ int BBQ::remove(int threadID)
     unique_lock<mutex> lock(the_lock);
     while ((nextEmpty - front) == 0)
     {
-        cout << "REMOVE DIS BISH WAITING: #" << threadID << endl;
+        cout << "Waiting to consume by thread number #" << threadID << endl;
         itemAdded.wait(lock);
     }
-    cout << "EJECTING DIS BISH: #" << threadID << endl;
     tmp = items.back();
+    cout << "Item ID #" << tmp << " consumed by thread number #" << threadID << endl;
     items.pop_back();
     nextEmpty--;
     itemRemoved.notify_all();
