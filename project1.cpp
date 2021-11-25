@@ -3,12 +3,14 @@
 #include <unistd.h>
 #include "BBQ.h"
 #define THREADS 20
-#define BBQ_CAPACITY 10
+#define BBQ_CAPACITY 25 // Buffer sizes (25, 50, 100)
 
 using namespace std;
 
-BBQ *qq = new BBQ(BBQ_CAPACITY);
+BBQ *grill = new BBQ(BBQ_CAPACITY);
 int bonk(int, int);
+const string bbq_items[] = {"Hotdogs", "Hamburger", "Corn", "Shrimp", "Buns", "BBQ Sauce", "Kebabs", "Onions", "Peppers", "Ribs", "Chicken", "Sausage", "Brisquet"};
+string randomGrillItem(); // returns a random bbq_item
 
 struct pthread_args
 {
@@ -37,9 +39,9 @@ void *add_bonk(void *TP) // Thread Producer
 
     while (1)
     {
-        qq->insert(i, threadName);
-        i = qq->get_stats().addedHits;
-        sleep(bonk(qq->size(), slp));
+        grill->insert(i, randomGrillItem(), threadName);
+        i = grill->get_stats().addedHits;
+        sleep(bonk(grill->size(), slp));
     }
 }
 
@@ -56,17 +58,15 @@ void *remove_bonk(void *TC) // Thread Consumer
     pid_t tid = gettid();
 #endif
     int id = tid;
-    int i = 0;
     pthread_args args = *((pthread_args *)TC);
     int slp = args.sleep;
     int threadName = args.threadId;
 
     while (1)
     {
-        qq->remove(threadName);
-        i++;
-        sleep(bonk(qq->size(), slp));
-        qq->printStats();
+        grill->remove(threadName);
+        sleep(bonk(grill->size(), slp));
+        grill->printStats();
     }
 }
 
@@ -152,9 +152,23 @@ int bonk(int currentQueueCapacity, int currentSleep)
     bool slowBonk = currentQueueCapacity >= BBQ_CAPACITY * 0.75;      // 75% full
     bool oneFourthBonk = currentQueueCapacity <= BBQ_CAPACITY * 0.25; // 0-25% filled
     if (slowBonk)
-        return currentSleep * (currentQueueCapacity / (double)BBQ_CAPACITY) + 1; // Sleep for a fraction of the size of the currently filled queue -- up tp 100%
+    {
+        cout << "75% ";
+        return rand() % (int)(currentSleep * (currentQueueCapacity / (double)BBQ_CAPACITY)) + currentSleep; // Sleep for a fraction of the size of the currently filled queue -- up tp 100%
+    }
     else if (oneFourthBonk)
-        return rand() % (currentQueueCapacity + 1);
+    {
+        cout << "1/4th ";
+        return rand() % (currentQueueCapacity + 1) + currentQueueCapacity;
+    }
     else
-        return rand() % (int)(currentQueueCapacity - (currentQueueCapacity * 0.25) + 2); // From 25-75
+    {
+        cout << "25-75 ";
+        return min((rand() % currentQueueCapacity + (int)(currentQueueCapacity * 0.75)), currentSleep); // Use min in case the currentQueue exceeds the currentSleep time
+    }
+}
+
+string randomGrillItem()
+{
+    return bbq_items[rand() % bbq_items->size()];
 }

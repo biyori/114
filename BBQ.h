@@ -14,13 +14,19 @@ class BBQ
         int removedWaitHits;
     };
 
+    struct bbq_item
+    {
+        string name;
+        int id;
+    };
+
 private:
     // Synchronization variables
     mutex the_lock;
     condition_variable itemAdded;
     condition_variable itemRemoved;
     // Use vector for dynamic allocation--set max size in constructor
-    vector<int> items; //push back & pop back mimic queue behavior
+    vector<bbq_item> items; //push back & pop back mimic queue behavior
     int front, nextEmpty;
     int max_size;
     int addedProbe, removeWaitProbe, removedProbe, addedWaitProbe;
@@ -28,8 +34,8 @@ private:
 public:
     BBQ(int);
     ~BBQ(){};
-    void insert(int item, int id);
-    int remove(int id);
+    void insert(int, string, int);
+    bbq_item remove(int);
     int size();
     statistics_t get_stats();
     void printStats();
@@ -41,7 +47,7 @@ BBQ::BBQ(int size)
     front = nextEmpty = 0;
     addedProbe = removeWaitProbe = removedProbe = addedWaitProbe = 0;
 }
-void BBQ::insert(int item, int threadID)
+void BBQ::insert(int item, string name, int threadID)
 {
     unique_lock<mutex> lock(the_lock);
     while ((nextEmpty - front) == max_size)
@@ -51,15 +57,15 @@ void BBQ::insert(int item, int threadID)
         itemRemoved.wait(lock);
     }
     addedProbe++; // Total items added
-    cout << "Item ID #" << item << " produced by thread number #" << threadID << endl;
-    items.push_back(item);
+    cout << "Item ID #" << item << " (" << name << ") produced by thread number #" << threadID << endl;
+    items.push_back(bbq_item{name, item});
     nextEmpty++;
     itemAdded.notify_all();
     lock.unlock();
 }
-int BBQ::remove(int threadID)
+BBQ::bbq_item BBQ::remove(int threadID)
 {
-    int tmp;
+    bbq_item tmp;
     unique_lock<mutex> lock(the_lock);
     while ((nextEmpty - front) == 0)
     {
@@ -69,7 +75,7 @@ int BBQ::remove(int threadID)
     }
     removedProbe++; // Total items removed
     tmp = items.back();
-    cout << "Item ID #" << tmp << " consumed by thread number #" << threadID << endl;
+    cout << "Item ID #" << tmp.id << " (" << tmp.name << ") consumed by thread number #" << threadID << endl;
     items.pop_back();
     nextEmpty--;
     itemRemoved.notify_all();
