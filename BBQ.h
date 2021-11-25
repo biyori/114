@@ -26,7 +26,7 @@ private:
     condition_variable itemAdded;
     condition_variable itemRemoved;
     // Use vector for dynamic allocation--set max size in constructor
-    vector<bbq_item> items; //push back & pop back mimic queue behavior
+    vector<bbq_item> items; // push back & pop back mimic queue behavior
     int front, nextEmpty;
     int max_size;
     int addedProbe, removeWaitProbe, removedProbe, addedWaitProbe;
@@ -52,12 +52,12 @@ void BBQ::insert(int item, string name, int threadID)
     unique_lock<mutex> lock(the_lock);
     while ((nextEmpty - front) == max_size)
     {
-        cout << "Waiting to produce by thread number #" << threadID << endl;
+        cout << "\033[33mWaiting to produce by thread number #" << threadID << "\033[0m" << endl;
         addedWaitProbe++; // Total wait hits for adding items
         itemRemoved.wait(lock);
     }
     addedProbe++; // Total items added
-    cout << "Item ID #" << item << " (" << name << ") produced by thread number #" << threadID << endl;
+    cout << "\033[32mItem ID #" << item << "\t(" << name << ")   \tproduced by thread number #" << threadID << "\033[0m" << endl;
     items.push_back(bbq_item{name, item});
     nextEmpty++;
     itemAdded.notify_all();
@@ -69,13 +69,13 @@ BBQ::bbq_item BBQ::remove(int threadID)
     unique_lock<mutex> lock(the_lock);
     while ((nextEmpty - front) == 0)
     {
-        cout << "Waiting to consume by thread number #" << threadID << endl;
+        cout << "\033[33mWaiting to consume by thread number #" << threadID << "\033[0m" << endl;
         removeWaitProbe++; // Total wait hits for removing items
         itemAdded.wait(lock);
     }
     removedProbe++; // Total items removed
     tmp = items.back();
-    cout << "Item ID #" << tmp.id << " (" << tmp.name << ") consumed by thread number #" << threadID << endl;
+    cout << "\033[31mItem ID #" << tmp.id << "\t(" << tmp.name << ")   \tconsumed by thread number #" << threadID << "\033[0m" << endl;
     items.pop_back();
     nextEmpty--;
     itemRemoved.notify_all();
@@ -93,5 +93,5 @@ BBQ::statistics_t BBQ::get_stats()
 }
 void BBQ::printStats()
 {
-    printf("Added: %2d Add Wait: %2d Removed: %2d Remove Wait: %2d\n", addedProbe, addedWaitProbe, removedProbe, removeWaitProbe);
+    printf("\033[1;37mProducer\n| \033[0;32mProduced: %2d\n| \033[33mWait: %6d\n\033[1;37mConsumer\n| \033[0;31mConsumed: %2d\n| \033[33mWait: %6d\033[0m\n", addedProbe, addedWaitProbe, removedProbe, removeWaitProbe);
 }
