@@ -23,6 +23,11 @@ struct pthread_args
     int threadId;
 };
 
+void cleanup_handler(void *arg)
+{
+    printf("Called clean-up handler\n");
+}
+
 void *add_bonk(void *TP) // Thread Producer
 {
 #ifdef __APPLE__
@@ -42,13 +47,17 @@ void *add_bonk(void *TP) // Thread Producer
     int slp = args.sleep; //*((int *)TP_Sleep);
     int threadName = args.threadId;
 
+    //  pthread_cleanup_push(cleanup_handler, NULL);
+
     while (1)
     {
-        pthread_testcancel(); // Check if thread should be terminated -- signal handler will send the termination request
         grill->insert(i, randomGrillItem(), threadName);
         i = grill->get_stats().addedHits;
         sleep(bonk(grill->size(), slp));
+        pthread_testcancel(); // Check if thread should be terminated -- signal handler will send the termination request
     }
+    // pthread_cleanup_pop(threadName);
+    return NULL;
 }
 
 void *remove_bonk(void *TC) // Thread Consumer
@@ -68,12 +77,16 @@ void *remove_bonk(void *TC) // Thread Consumer
     int slp = args.sleep;
     int threadName = args.threadId;
 
+    //  pthread_cleanup_push(cleanup_handler, NULL);
+
     while (1)
     {
-        pthread_testcancel(); // Check if thread should be terminated -- signal handler will send the termination request
         grill->remove(threadName);
         sleep(rand() % slp);
+        pthread_testcancel(); // Check if thread should be terminated -- signal handler will send the termination request
     }
+    //  pthread_cleanup_pop(threadName);
+    return NULL;
 }
 
 int main(int argc, char **argv)
@@ -104,6 +117,12 @@ int main(int argc, char **argv)
     // Parse the argument chars to integers
     int TC = atoi(argv[1]); // Consumer
     int TP = atoi(argv[2]); // Producer
+
+    if (TC < 2 || TP < 2)
+    {
+        cerr << "\033[31mError TC & TP must be greater than 1\033[0m" << endl;
+        return -3;
+    }
 
     // Create producer and consumer threads
     pthread_t p_thread[THREADS];
