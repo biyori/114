@@ -99,14 +99,22 @@ int main(int argc, char **argv)
     if (argc != 3)
     {
         for (int i = 0; i < BBQ_CAPACITY; i++)
-            printf("Queue Size [%d] sleeps for => %2d\n", i, bonk(i, 4));
+            printf("Queue Size [%d] sleeps for => %2d\n", i, bonk(i, 10));
 
-        cout << "Producers Threads: ";
-        for (int i = 0; i < THREADS / 2; i++)
-            printf("%3d", i);
-        cout << "\nConsumers Threads: ";
-        for (int i = THREADS / 2; i < THREADS; i++)
-            printf("%3d", i);
+        printf("Producers\tConsumers\n");
+        for (int i = 0; i < THREADS; i++)
+        {
+            if (i % 2 == 0)
+            {
+                printf("[P]: %3d|", i);
+            }
+            else
+            {
+                printf("\t[C]: %3d|\n", i);
+            }
+        }
+        cout << "---------\t---------";
+
         cout << endl;
 
         cerr << "\033[31mError missing arguments: \033[0m";
@@ -128,38 +136,75 @@ int main(int argc, char **argv)
     pthread_t p_thread[THREADS];
     int thr_add, thr_rem;
     pthread_args _args;
-    for (int i = 0; i < THREADS / 2; i++)
+
+    for (int i = 0; i < THREADS; i++)
     {
-        _args = {TP, i};
-        thr_add = pthread_create(&p_thread[i], NULL, add_bonk, &_args);
-        if (thr_add < 0)
+        if (i % 2 == 0)
         {
-            perror("thread create error on add_function: ");
-            cerr << i << endl;
-            exit(0);
+            _args = {TP, i};
+            thr_add = pthread_create(&p_thread[i], NULL, add_bonk, &_args);
+            if (thr_add < 0)
+            {
+                perror("thread create error on add_function: ");
+                cerr << i << endl;
+                exit(0);
+            }
+            else
+            {
+                // Producer thread creation
+                cout << "\033[1;35mCreating producer thread #" << i << "\033[0m" << endl;
+            }
         }
         else
         {
-            // Thread creation
-            cout << "\033[1;35mCreating producer thread #" << i << "\033[0m" << endl;
+            _args = {TC, i};
+            thr_rem = pthread_create(&p_thread[i], NULL, remove_bonk, &_args);
+            if (thr_rem < 0)
+            {
+                perror("thread create error on remove_function: ");
+                cerr << i << endl;
+                exit(0);
+            }
+            else
+            {
+                // Consumer thread creation
+                cout << "\033[1;35mCreating consumer thread #" << i << "\033[0m" << endl;
+            }
         }
     }
 
-    for (int i = THREADS / 2; i <= THREADS; i++)
-    {
-        _args = {TC, i};
-        thr_rem = pthread_create(&p_thread[i], NULL, remove_bonk, &_args);
-        if (thr_rem < 0)
-        {
-            perror("thread create error on remove_function: ");
-            cerr << i << endl;
-            exit(0);
-        }
-        else
-        {
-            cout << "\033[1;35mCreating consumer thread #" << i << "\033[0m" << endl;
-        }
-    }
+    // for (int i = 0; i < THREADS / 2; i++)
+    // {
+    //     _args = {TP, i};
+    //     thr_add = pthread_create(&p_thread[i], NULL, add_bonk, &_args);
+    //     if (thr_add < 0)
+    //     {
+    //         perror("thread create error on add_function: ");
+    //         cerr << i << endl;
+    //         exit(0);
+    //     }
+    //     else
+    //     {
+    //         // Thread creation
+    //         cout << "\033[1;35mCreating producer thread #" << i << "\033[0m" << endl;
+    //     }
+    // }
+    //TODO PUT IN WAN LOOP
+    // for (int i = THREADS / 2; i <= THREADS; i++)
+    // {
+    //     _args = {TC, i};
+    //     thr_rem = pthread_create(&p_thread[i], NULL, remove_bonk, &_args);
+    //     if (thr_rem < 0)
+    //     {
+    //         perror("thread create error on remove_function: ");
+    //         cerr << i << endl;
+    //         exit(0);
+    //     }
+    //     else
+    //     {
+    //         cout << "\033[1;35mCreating consumer thread #" << i << "\033[0m" << endl;
+    //     }
+    // }
     // Start Timer
     startTime = chrono::steady_clock::now();
     signal(SIGINT, stats_handler);
