@@ -118,7 +118,7 @@ int main(int argc, char **argv)
         cout << endl;
 
         cerr << "\033[31mError missing arguments: \033[0m";
-        cerr << "\033[33m./project1 TC TP\033[0m" << endl;
+        cerr << "\033[93m./project1 TC TP\033[0m" << endl;
         return -2;
     }
 

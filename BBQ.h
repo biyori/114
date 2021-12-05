@@ -52,7 +52,7 @@ void BBQ::insert(int item, string name, int threadID)
     unique_lock<mutex> lock(the_lock);
     while ((nextEmpty - front) == max_size)
     {
-        cout << "\033[33mWaiting to produce by thread number #" << threadID << "\033[0m" << endl;
+        cout << "\033[93mWaiting to produce by thread number #" << threadID << "\033[0m" << endl;
         addedWaitProbe++; // Total wait hits for adding items
         itemRemoved.wait(lock);
     }
@@ -69,7 +69,7 @@ BBQ::bbq_item BBQ::remove(int threadID)
     unique_lock<mutex> lock(the_lock);
     while ((nextEmpty - front) == 0)
     {
-        cout << "\033[33mWaiting to consume by thread number #" << threadID << "\033[0m" << endl;
+        cout << "\033[93mWaiting to consume by thread number #" << threadID << "\033[0m" << endl;
         removeWaitProbe++; // Total wait hits for removing items
         itemAdded.wait(lock);
     }
