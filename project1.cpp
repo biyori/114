@@ -3,9 +3,10 @@
 #include <unistd.h>
 #include <signal.h>
 #include <chrono>
+#include <thread>
 #include "BBQ.h"
 #define THREADS 20
-#define BBQ_CAPACITY 50 // Buffer sizes (25, 50, 100)
+#define BBQ_CAPACITY 25 // Buffer sizes (25, 50, 100)
 
 using namespace std;
 
@@ -53,7 +54,8 @@ void *add_bonk(void *TP) // Thread Producer
     {
         grill->insert(i, randomGrillItem(), threadName);
         i = grill->get_stats().addedHits;
-        sleep(bonk(grill->size(), slp));
+        //sleep(bonk(grill->size(), slp));
+        std::this_thread::sleep_for(std::chrono::milliseconds(bonk(grill->size(), slp)));
         pthread_testcancel(); // Check if thread should be terminated -- signal handler will send the termination request
     }
     // pthread_cleanup_pop(threadName);
@@ -82,7 +84,8 @@ void *remove_bonk(void *TC) // Thread Consumer
     while (1)
     {
         grill->remove(threadName);
-        sleep(rand() % slp);
+        //sleep(rand() % slp); // sleep in seconds sucks for this application
+        std::this_thread::sleep_for(std::chrono::milliseconds(rand() % slp));
         pthread_testcancel(); // Check if thread should be terminated -- signal handler will send the termination request
     }
     //  pthread_cleanup_pop(threadName);
@@ -99,7 +102,7 @@ int main(int argc, char **argv)
     if (argc != 3)
     {
         for (int i = 0; i < BBQ_CAPACITY; i++)
-            printf("Queue Size [%d] sleeps for => %2d\n", i, bonk(i, 10));
+            printf("Queue Size [%d] sleeps for => %2d ms\n", i, bonk(i, 10));
 
         printf("Producers\tConsumers\n");
         for (int i = 0; i < THREADS; i++)
@@ -173,38 +176,6 @@ int main(int argc, char **argv)
         }
     }
 
-    // for (int i = 0; i < THREADS / 2; i++)
-    // {
-    //     _args = {TP, i};
-    //     thr_add = pthread_create(&p_thread[i], NULL, add_bonk, &_args);
-    //     if (thr_add < 0)
-    //     {
-    //         perror("thread create error on add_function: ");
-    //         cerr << i << endl;
-    //         exit(0);
-    //     }
-    //     else
-    //     {
-    //         // Thread creation
-    //         cout << "\033[1;35mCreating producer thread #" << i << "\033[0m" << endl;
-    //     }
-    // }
-    //TODO PUT IN WAN LOOP
-    // for (int i = THREADS / 2; i <= THREADS; i++)
-    // {
-    //     _args = {TC, i};
-    //     thr_rem = pthread_create(&p_thread[i], NULL, remove_bonk, &_args);
-    //     if (thr_rem < 0)
-    //     {
-    //         perror("thread create error on remove_function: ");
-    //         cerr << i << endl;
-    //         exit(0);
-    //     }
-    //     else
-    //     {
-    //         cout << "\033[1;35mCreating consumer thread #" << i << "\033[0m" << endl;
-    //     }
-    // }
     // Start Timer
     startTime = chrono::steady_clock::now();
     signal(SIGINT, stats_handler);
@@ -226,26 +197,27 @@ int main(int argc, char **argv)
 
 int bonk(int currentQueueCapacity, int currentSleep)
 {
-    // srand(time(NULL));
-    // below 25% occupancy and reaches twice the initial average speed when buffer is empty
     //  If the current queue capacity is greater than or equal to 75% full
-    //  Slow mode
     bool slowBonk = currentQueueCapacity >= BBQ_CAPACITY * 0.75;      // 75% full
     bool oneFourthBonk = currentQueueCapacity <= BBQ_CAPACITY * 0.25; // 0-25% filled
     if (slowBonk)
     {
         // cout << "75% ";
-        return min((rand() % (currentSleep - 1 * (currentQueueCapacity / BBQ_CAPACITY)) + currentSleep), currentSleep); // Sleep for a fraction of the size of the currently filled queue -- up tp 100%
+        // Sleep for a fraction of the size of the currently filled queue -- up tp 100%
+        return min((rand() % (currentSleep - 1 * (currentQueueCapacity / BBQ_CAPACITY)) + currentSleep), currentSleep);
     }
     else if (oneFourthBonk)
     {
+        // below 25% occupancy and reaches twice the initial average speed when buffer is empty
         // cout << "1/4th ";
-        return min((rand() % (currentQueueCapacity + 1)), (int)(currentSleep * 0.25));
+        // Min([currentQueue+1, sleep/2]) -- should be sleep/2 to reach program requirements
+        return min((rand() % (currentQueueCapacity + 1) + 1), (int)(currentSleep * 0.50));
     }
     else
     {
         // cout << "25-75 ";
-        return min((rand() % (int)(currentQueueCapacity * 0.25) + (int)(currentQueueCapacity * 0.75)), (int)(currentSleep * 0.75)); // Use min in case the currentQueue exceeds the currentSleep time
+        // Use min in case the currentQueue exceeds the currentSleep time
+        return min((rand() % (int)(currentQueueCapacity * 0.25) + (int)(currentQueueCapacity * 0.75)), (int)(currentSleep * 0.75));
     }
 }
 
